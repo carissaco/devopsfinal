@@ -14,7 +14,7 @@ export default function App() {
       <header className="bg-cocoa text-cream shadow-md">
         <div className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
           <Link to="/" className="font-display text-3xl tracking-wide">
-            🥐 Sourdough &amp; Sugar
+            🥐 Carissa Bakery
           </Link>
           <nav className="flex gap-6 text-sm font-medium">
             <Link to="/" className="hover:text-butter">Shop</Link>

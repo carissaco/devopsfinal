@@ -7,7 +7,7 @@ import httpx
 from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, generate_latest
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
 
 from . import db, migrations
 
@@ -44,7 +44,7 @@ class OrderItemIn(BaseModel):
 
 class OrderIn(BaseModel):
     customer_name: str = Field(min_length=1, max_length=120)
-    customer_email: EmailStr
+    customer_email: str = Field(min_length=3, max_length=254)
     items: list[OrderItemIn] = Field(min_length=1)
 
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, formatPrice } from "../api";
-import type { Product, Stock } from "../types";
+import type { Product } from "../types";
 import { useCart } from "../cart";
 
 export default function ProductList() {
