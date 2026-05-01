@@ -1,0 +1,80 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bakery
+      POSTGRES_PASSWORD: bakery
+      POSTGRES_DB: bakery
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bakery -d bakery"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  catalog-svc:
+    build: ./apps/catalog-svc
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bakery?currentSchema=catalog
+      SPRING_DATASOURCE_USERNAME: bakery
+      SPRING_DATASOURCE_PASSWORD: bakery
+      SPRING_FLYWAY_DEFAULT_SCHEMA: catalog
+      SPRING_FLYWAY_SCHEMAS: catalog
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: catalog
+      SERVER_PORT: 8080
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  inventory-svc:
+    build: ./apps/inventory-svc
+    environment:
+      DATABASE_URL: postgresql://bakery:bakery@db:5432/bakery
+      DB_SCHEMA: inventory
+      PORT: 8080
+    ports:
+      - "8082:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  orders-svc:
+    build: ./apps/orders-svc
+    environment:
+      DATABASE_URL: postgresql://bakery:bakery@db:5432/bakery
+      DB_SCHEMA: orders
+      CATALOG_URL: http://catalog-svc:8080
+      INVENTORY_URL: http://inventory-svc:8080
+      PORT: 8080
+    ports:
+      - "8083:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      catalog-svc:
+        condition: service_started
+      inventory-svc:
+        condition: service_started
+
+  web:
+    build:
+      context: ./apps/web
+      args:
+        VITE_CATALOG_URL: http://localhost:8081
+        VITE_ORDERS_URL: http://localhost:8083
+        VITE_INVENTORY_URL: http://localhost:8082
+    ports:
+      - "5173:80"
+    depends_on:
+      - catalog-svc
+      - orders-svc
+      - inventory-svc
+
+volumes:
+  dbdata:
