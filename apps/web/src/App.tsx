@@ -43,7 +43,7 @@ export default function App() {
 
       <footer className="bg-cocoa text-cream/70 text-sm">
         <div className="max-w-6xl mx-auto px-6 py-6 text-center">
-          Baked fresh daily · DevOps capstone demo
+          Baked fresh daily · DevOps final demo
         </div>
       </footer>
     </div>
