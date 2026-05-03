@@ -1,0 +1,30 @@
+fullnameOverride: catalog
+runtime: java
+
+image:
+  repository: catalog-svc
+  tag: latest
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 384Mi
+  limits:
+    cpu: 500m
+    memory: 768Mi
+
+probes:
+  liveness:
+    path: /actuator/health/liveness
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readiness:
+    path: /actuator/health/readiness
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+db:
+  schema: catalog
+
+metrics:
+  path: /actuator/prometheus

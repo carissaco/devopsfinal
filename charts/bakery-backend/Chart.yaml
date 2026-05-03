@@ -1,0 +1,6 @@
+apiVersion: v2
+name: bakery-backend
+description: Generic backend service chart for Carissa Bakery (Java Spring Boot or Python FastAPI)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

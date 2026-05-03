@@ -1,0 +1,56 @@
+# MUST be set per-service via -f values/<svc>.yaml
+fullnameOverride: ""        # e.g. "catalog" — drives Service name and DNS
+runtime: ""                 # "java" or "python"
+
+replicaCount: 1
+
+image:
+  repository: ""            # e.g. "catalog-svc"
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+db:
+  host: bakery-db
+  port: 5432
+  database: bakery
+  schema: ""                # e.g. "catalog"
+  username: bakery
+  passwordSecretName: bakery-db
+  passwordSecretKey: password
+
+# Extra env vars beyond the runtime defaults (e.g. orders' CATALOG_URL/INVENTORY_URL).
+extraEnv: []
+
+metrics:
+  enabled: true
+  path: /metrics
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

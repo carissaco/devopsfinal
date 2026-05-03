@@ -1,0 +1,9 @@
+fullnameOverride: inventory
+runtime: python
+
+image:
+  repository: inventory-svc
+  tag: latest
+
+db:
+  schema: inventory

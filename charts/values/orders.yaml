@@ -1,0 +1,15 @@
+fullnameOverride: orders
+runtime: python
+
+image:
+  repository: orders-svc
+  tag: latest
+
+db:
+  schema: orders
+
+extraEnv:
+  - name: CATALOG_URL
+    value: http://catalog
+  - name: INVENTORY_URL
+    value: http://inventory

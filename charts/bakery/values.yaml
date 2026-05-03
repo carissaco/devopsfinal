@@ -1,0 +1,75 @@
+# Local-cluster Postgres (Bitnami). Disable for EKS — RDS will be used instead.
+postgresql:
+  enabled: true
+  auth:
+    username: bakery
+    password: bakery
+    database: bakery
+  primary:
+    initdb:
+      scripts:
+        01-create-schemas.sql: |
+          CREATE SCHEMA IF NOT EXISTS catalog;
+          CREATE SCHEMA IF NOT EXISTS orders;
+          CREATE SCHEMA IF NOT EXISTS inventory;
+
+# Bitnami creates Service `bakery-postgresql` and Secret `bakery-postgresql` (key: password).
+# Each subchart instance below is the bakery-backend chart aliased under the service name.
+catalog:
+  fullnameOverride: catalog
+  runtime: java
+  image:
+    repository: catalog-svc
+    tag: latest
+  probes:
+    liveness:
+      path: /actuator/health/liveness
+      initialDelaySeconds: 30
+      periodSeconds: 10
+    readiness:
+      path: /actuator/health/readiness
+      initialDelaySeconds: 10
+      periodSeconds: 5
+  metrics:
+    path: /actuator/prometheus
+  db:
+    host: bakery-postgresql
+    schema: catalog
+    username: bakery
+    passwordSecretName: bakery-postgresql
+    passwordSecretKey: password
+
+inventory:
+  fullnameOverride: inventory
+  runtime: python
+  image:
+    repository: inventory-svc
+    tag: latest
+  db:
+    host: bakery-postgresql
+    schema: inventory
+    username: bakery
+    passwordSecretName: bakery-postgresql
+    passwordSecretKey: password
+
+orders:
+  fullnameOverride: orders
+  runtime: python
+  image:
+    repository: orders-svc
+    tag: latest
+  db:
+    host: bakery-postgresql
+    schema: orders
+    username: bakery
+    passwordSecretName: bakery-postgresql
+    passwordSecretKey: password
+  extraEnv:
+    - name: CATALOG_URL
+      value: http://catalog
+    - name: INVENTORY_URL
+      value: http://inventory
+
+web:
+  ingress:
+    enabled: false

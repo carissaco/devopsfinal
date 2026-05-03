@@ -1,0 +1,50 @@
+replicaCount: 1
+
+image:
+  repository: web
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 32Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+probes:
+  liveness:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  readiness:
+    path: /
+    initialDelaySeconds: 2
+    periodSeconds: 5
+
+# The React bundle is built with VITE_*_URL baked in at image-build time.
+# The chart doesn't inject these — the CI must build per-environment images.
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: bakery.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+podAnnotations: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

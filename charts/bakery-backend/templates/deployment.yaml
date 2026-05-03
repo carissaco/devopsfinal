@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bakery-backend.fullname" . }}
+  labels:
+    {{- include "bakery-backend.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "bakery-backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "bakery-backend.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- if .Values.metrics.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: {{ .Values.service.targetPort | quote }}
+        prometheus.io/path: {{ .Values.metrics.path | quote }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "bakery-backend.fullname" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            {{- if eq .Values.runtime "java" }}
+            - name: SERVER_PORT
+              value: {{ .Values.service.targetPort | quote }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ .Values.db.host }}:{{ .Values.db.port }}/{{ .Values.db.database }}?currentSchema={{ .Values.db.schema }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: {{ .Values.db.username | quote }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.passwordSecretName }}
+                  key: {{ .Values.db.passwordSecretKey }}
+            - name: SPRING_FLYWAY_DEFAULT_SCHEMA
+              value: {{ .Values.db.schema | quote }}
+            - name: SPRING_FLYWAY_SCHEMAS
+              value: {{ .Values.db.schema | quote }}
+            - name: SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA
+              value: {{ .Values.db.schema | quote }}
+            {{- else if eq .Values.runtime "python" }}
+            - name: PORT
+              value: {{ .Values.service.targetPort | quote }}
+            - name: DB_SCHEMA
+              value: {{ .Values.db.schema | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.db.passwordSecretName }}
+                  key: {{ .Values.db.passwordSecretKey }}
+            - name: DATABASE_URL
+              value: "postgresql://{{ .Values.db.username }}:$(DB_PASSWORD)@{{ .Values.db.host }}:{{ .Values.db.port }}/{{ .Values.db.database }}"
+            {{- else }}
+            {{- fail "values.runtime must be 'java' or 'python'" }}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
