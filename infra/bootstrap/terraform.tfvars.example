@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+# Bucket names are globally unique across all of AWS — pick something specific.
+
+aws_region        = "us-east-1"
+state_bucket_name = "carissa-bakery-tfstate"
+lock_table_name   = "bakery-tflock"

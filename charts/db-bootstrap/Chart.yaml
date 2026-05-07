@@ -1,0 +1,6 @@
+apiVersion: v2
+name: db-bootstrap
+description: Pre-creates per-service schemas in the bakery RDS database via ESO + Job.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

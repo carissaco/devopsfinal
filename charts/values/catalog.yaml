@@ -16,11 +16,11 @@ resources:
 probes:
   liveness:
     path: /actuator/health/liveness
-    initialDelaySeconds: 30
+    initialDelaySeconds: 90
     periodSeconds: 10
   readiness:
     path: /actuator/health/readiness
-    initialDelaySeconds: 10
+    initialDelaySeconds: 30
     periodSeconds: 5
 
 db:
@@ -28,3 +28,9 @@ db:
 
 metrics:
   path: /actuator/prometheus
+
+# Lower JVM DNS cache so the bakery-db ExternalName Service picks up RDS
+# endpoint changes after destroy/recreate without needing a pod restart.
+extraEnv:
+  - name: JAVA_TOOL_OPTIONS
+    value: "-Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=10"

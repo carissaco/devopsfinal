@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-bootstrap-schemas
+  namespace: {{ .Values.namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: psql
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              export PGPASSWORD="$(cat /secret/password)"
+              export PGUSER="$(cat /secret/username)"
+              psql -h bakery-db -d {{ .Values.rdsDb }} -f /sql/01-create-schemas.sql
+          volumeMounts:
+            - name: secret
+              mountPath: /secret
+              readOnly: true
+            - name: sql
+              mountPath: /sql
+              readOnly: true
+      volumes:
+        - name: secret
+          secret:
+            secretName: bakery-db
+        - name: sql
+          configMap:
+            name: db-bootstrap-schemas

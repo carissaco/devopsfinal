@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-bootstrap-schemas
+  namespace: {{ .Values.namespace }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation
+data:
+  01-create-schemas.sql: |
+    {{- range .Values.schemas }}
+    CREATE SCHEMA IF NOT EXISTS {{ . }};
+    {{- end }}

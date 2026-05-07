@@ -1,0 +1,20 @@
+namespace: bakery
+
+# Required, passed by Terraform: ARN of the RDS-managed master password secret
+# in AWS Secrets Manager. The secret stores {"username":"bakery","password":"..."}.
+rdsSecretArn: ""
+
+rdsDb: bakery
+rdsUser: bakery
+
+# Cluster-scoped ESO ClusterSecretStore created by Terraform (k8s-bootstrap.tf).
+clusterSecretStoreName: aws-secrets-manager
+
+schemas:
+  - catalog
+  - inventory
+  - orders
+
+image:
+  repository: postgres
+  tag: 16-alpine

@@ -1,0 +1,118 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: 6.16.0
+    helm:
+      releaseName: loki
+      values: |
+        loki:
+          auth_enabled: false
+          # Single-binary mode keeps it small (one Loki pod handles all roles)
+          commonConfig:
+            replication_factor: 1
+          schemaConfig:
+            configs:
+              - from: "2024-01-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: loki_index_
+                  period: 24h
+          storage:
+            type: filesystem
+          limits_config:
+            retention_period: 168h  # 7 days
+
+        deploymentMode: SingleBinary
+
+        singleBinary:
+          replicas: 1
+          persistence:
+            enabled: true
+            size: 5Gi
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+
+        # Disable HA components (already covered by single binary)
+        backend: { replicas: 0 }
+        read: { replicas: 0 }
+        write: { replicas: 0 }
+        ingester: { replicas: 0 }
+        querier: { replicas: 0 }
+        queryFrontend: { replicas: 0 }
+        queryScheduler: { replicas: 0 }
+        distributor: { replicas: 0 }
+        compactor: { replicas: 0 }
+        indexGateway: { replicas: 0 }
+        bloomCompactor: { replicas: 0 }
+        bloomGateway: { replicas: 0 }
+
+        # Tail logs from every node
+        chunksCache:
+          enabled: false
+        resultsCache:
+          enabled: false
+
+        # Subchart: promtail (log collector DaemonSet that ships to Loki)
+        # Loki chart embeds it as a separate dependency
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+---
+# Promtail (log collector) ships logs to Loki. Separate Argo CD app because
+# the Loki chart's promtail subchart was deprecated; promtail now has its own chart.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promtail
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: promtail
+    targetRevision: 6.16.6
+    helm:
+      releaseName: promtail
+      values: |
+        config:
+          clients:
+            - url: http://loki.logging.svc.cluster.local:3100/loki/api/v1/push
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            memory: 128Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: logging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

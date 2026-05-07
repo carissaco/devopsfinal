@@ -1,0 +1,68 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 62.7.0
+    helm:
+      releaseName: kube-prometheus-stack
+      values: |
+        # AlertManager disabled in v1 (no email/Slack wiring yet — separate plan)
+        alertmanager:
+          enabled: false
+
+        prometheus:
+          prometheusSpec:
+            retention: 1d
+            resources:
+              requests:
+                cpu: 200m
+                memory: 1Gi
+              limits:
+                memory: 2Gi
+            # Stricter scrape selectors so it doesn't try to discover everything
+            serviceMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelectorNilUsesHelmValues: false
+            ruleSelectorNilUsesHelmValues: false
+
+        grafana:
+          # Static admin password until OAuth wiring lands in plan 4
+          adminPassword: bakery
+          persistence:
+            enabled: true
+            size: 2Gi
+          # Pre-load the cluster overview dashboard set
+          defaultDashboardsEnabled: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+
+        kube-state-metrics:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+
+        prometheus-node-exporter:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
