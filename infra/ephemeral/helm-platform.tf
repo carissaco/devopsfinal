@@ -133,6 +133,47 @@ resource "helm_release" "external_secrets" {
   ]
 }
 
+# --- NGINX Ingress Controller ---
+# Replaces ALB Ingress for public traffic. We hit a TLS issue with the AWS LB
+# Controller where SNI for any *.usfcar.xyz hostname returned garbage instead of
+# a TLS handshake, despite valid ACM cert. Couldn't reproduce a fix.
+# NGINX Ingress uses K8s Secrets for TLS (cert-manager-issued certs work directly)
+# and is fronted by an NLB (L4 passthrough — NGINX terminates TLS itself).
+resource "helm_release" "nginx_ingress" {
+  name             = "ingress-nginx"
+  namespace        = "ingress-nginx"
+  create_namespace = true
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  version          = "4.11.3"
+
+  values = [
+    yamlencode({
+      controller = {
+        service = {
+          type = "LoadBalancer"
+          annotations = {
+            "service.beta.kubernetes.io/aws-load-balancer-type"                              = "external"
+            "service.beta.kubernetes.io/aws-load-balancer-nlb-target-type"                   = "ip"
+            "service.beta.kubernetes.io/aws-load-balancer-scheme"                            = "internet-facing"
+            "service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled" = "true"
+          }
+        }
+        ingressClassResource = {
+          name    = "nginx"
+          enabled = true
+          default = true
+        }
+        ingressClass = "nginx"
+      }
+    })
+  ]
+
+  depends_on = [
+    helm_release.aws_load_balancer_controller,
+  ]
+}
+
 # --- Argo CD ---
 # After install, get the initial admin password with:
 #   kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
@@ -144,9 +185,9 @@ resource "helm_release" "argo_cd" {
   chart            = "argo-cd"
   version          = "7.6.12"
 
-  # Argo CD self-signs and terminates TLS at the pod by default. The ALB
-  # terminates TLS at the edge, so we run argocd-server with `--insecure`
-  # (HTTP-only inside the cluster) and let the ALB own the cert.
+  # Argo CD self-signs and terminates TLS at the pod by default. NGINX terminates
+  # TLS at the edge, so we run argocd-server with `--insecure` (HTTP-only inside
+  # the cluster) and let NGINX own the cert.
   values = [
     yamlencode({
       configs = {
@@ -160,16 +201,11 @@ resource "helm_release" "argo_cd" {
         }
         ingress = {
           enabled          = true
-          ingressClassName = "alb"
+          ingressClassName = "nginx"
           hostname         = "argocd.usfcar.xyz"
           annotations = {
-            "alb.ingress.kubernetes.io/scheme"                 = "internet-facing"
-            "alb.ingress.kubernetes.io/target-type"            = "ip"
-            "alb.ingress.kubernetes.io/listen-ports"           = "[{\"HTTP\":80},{\"HTTPS\":443}]"
-            "alb.ingress.kubernetes.io/ssl-redirect"           = "443"
-            "alb.ingress.kubernetes.io/group.name"             = "bakery"
-            "cert-manager.io/cluster-issuer"                   = "letsencrypt-prod"
-            "external-dns.alpha.kubernetes.io/hostname"        = "argocd.usfcar.xyz"
+            "cert-manager.io/cluster-issuer"            = "letsencrypt-prod"
+            "external-dns.alpha.kubernetes.io/hostname" = "argocd.usfcar.xyz"
           }
           tls = true
         }
@@ -182,6 +218,7 @@ resource "helm_release" "argo_cd" {
     helm_release.cert_manager,
     helm_release.external_dns,
     helm_release.external_secrets,
+    helm_release.nginx_ingress,
   ]
 }
 

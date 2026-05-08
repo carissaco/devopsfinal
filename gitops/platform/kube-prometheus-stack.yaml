@@ -46,13 +46,8 @@ spec:
               memory: 128Mi
           ingress:
             enabled: true
-            ingressClassName: alb
+            ingressClassName: nginx
             annotations:
-              alb.ingress.kubernetes.io/scheme: internet-facing
-              alb.ingress.kubernetes.io/target-type: ip
-              alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
-              alb.ingress.kubernetes.io/ssl-redirect: "443"
-              alb.ingress.kubernetes.io/group.name: bakery
               cert-manager.io/cluster-issuer: letsencrypt-prod
               external-dns.alpha.kubernetes.io/hostname: grafana.usfcar.xyz
             hosts:
