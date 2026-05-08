@@ -29,6 +29,25 @@ resource "kubernetes_service" "bakery_db" {
   depends_on = [helm_release.aws_load_balancer_controller]
 }
 
+resource "kubernetes_storage_class" "gp3" {
+  metadata {
+    name = "gp3"
+    annotations = {
+      "storageclass.kubernetes.io/is-default-class" = "true"
+    }
+  }
+  storage_provisioner    = "ebs.csi.aws.com"
+  reclaim_policy         = "Delete"
+  volume_binding_mode    = "WaitForFirstConsumer"
+  allow_volume_expansion = true
+  parameters = {
+    type   = "gp3"
+    fsType = "ext4"
+  }
+
+  depends_on = [module.eks]
+}
+
 resource "kubernetes_manifest" "cluster_secret_store" {
   manifest = {
     apiVersion = "external-secrets.io/v1beta1"

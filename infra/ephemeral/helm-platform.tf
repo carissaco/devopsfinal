@@ -144,12 +144,38 @@ resource "helm_release" "argo_cd" {
   chart            = "argo-cd"
   version          = "7.6.12"
 
-  # ClusterIP — exposed externally via an Ingress (managed by ALB controller +
-  # cert-manager + ExternalDNS) once those are running. See gitops/.
-  set {
-    name  = "server.service.type"
-    value = "ClusterIP"
-  }
+  # Argo CD self-signs and terminates TLS at the pod by default. The ALB
+  # terminates TLS at the edge, so we run argocd-server with `--insecure`
+  # (HTTP-only inside the cluster) and let the ALB own the cert.
+  values = [
+    yamlencode({
+      configs = {
+        params = {
+          "server.insecure" = true
+        }
+      }
+      server = {
+        service = {
+          type = "ClusterIP"
+        }
+        ingress = {
+          enabled          = true
+          ingressClassName = "alb"
+          hostname         = "argocd.usfcar.xyz"
+          annotations = {
+            "alb.ingress.kubernetes.io/scheme"                 = "internet-facing"
+            "alb.ingress.kubernetes.io/target-type"            = "ip"
+            "alb.ingress.kubernetes.io/listen-ports"           = "[{\"HTTP\":80},{\"HTTPS\":443}]"
+            "alb.ingress.kubernetes.io/ssl-redirect"           = "443"
+            "alb.ingress.kubernetes.io/group.name"             = "bakery"
+            "cert-manager.io/cluster-issuer"                   = "letsencrypt-prod"
+            "external-dns.alpha.kubernetes.io/hostname"        = "argocd.usfcar.xyz"
+          }
+          tls = true
+        }
+      }
+    })
+  ]
 
   depends_on = [
     helm_release.aws_load_balancer_controller,

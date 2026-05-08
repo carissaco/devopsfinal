@@ -12,9 +12,31 @@ spec:
     targetRevision: main
     path: charts/web
     helm:
+      releaseName: web
       parameters:
         - name: image.repository
           value: 014516479340.dkr.ecr.us-east-1.amazonaws.com/web
+      values: |
+        ingress:
+          enabled: true
+          className: alb
+          annotations:
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/target-type: ip
+            alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+            alb.ingress.kubernetes.io/ssl-redirect: "443"
+            alb.ingress.kubernetes.io/group.name: bakery
+            cert-manager.io/cluster-issuer: letsencrypt-prod
+            external-dns.alpha.kubernetes.io/hostname: bakery.usfcar.xyz
+          hosts:
+            - host: bakery.usfcar.xyz
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - hosts:
+                - bakery.usfcar.xyz
+              secretName: bakery-tls
   destination:
     server: https://kubernetes.default.svc
     namespace: bakery
