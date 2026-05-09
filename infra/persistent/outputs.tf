@@ -32,3 +32,8 @@ output "domain_name" {
   description = "Apex domain name."
   value       = var.domain_name
 }
+
+output "github_actions_role_arn" {
+  description = "Role ARN for the GitHub Actions OIDC trust. Reference in workflow `aws-actions/configure-aws-credentials`."
+  value       = aws_iam_role.github_actions_ecr.arn
+}

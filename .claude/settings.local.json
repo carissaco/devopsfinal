@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(curl -v https://k8s-bakery-b2ad28f61b-1866703853.us-east-1.elb.amazonaws.com -k --resolve argocd.usfcar.xyz:443:34.198.230.124 https://argocd.usfcar.xyz)",
-      "Bash(openssl s_client -connect k8s-bakery-b2ad28f61b-1165271557.us-east-1.elb.amazonaws.com:443 -servername google.com)"
+      "Bash(openssl s_client -connect k8s-bakery-b2ad28f61b-1165271557.us-east-1.elb.amazonaws.com:443 -servername google.com)",
+      "Bash(ls C:\\\\\\\\Users\\\\\\\\cmocu\\\\\\\\devops\\\\\\\\midterm 1\\\\\\\\midterm-infra\\\\\\\\ *)"
     ]
   }
 }
