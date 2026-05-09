@@ -48,3 +48,8 @@ podAnnotations: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Argo Rollouts Blue/Green strategy.
+rollout:
+  autoPromotionEnabled: false
+  scaleDownDelaySeconds: 30

@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orders-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/carissaco/devopsfinal.git
+    targetRevision: main
+    path: charts/bakery-backend
+    helm:
+      releaseName: orders
+      valueFiles:
+        - ../values/orders.yaml
+        - ../values/orders-prod.yaml
+      parameters:
+        - name: image.repository
+          value: 014516479340.dkr.ecr.us-east-1.amazonaws.com/orders-svc
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bakery-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

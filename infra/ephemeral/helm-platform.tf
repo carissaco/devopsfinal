@@ -241,3 +241,51 @@ resource "helm_release" "db_bootstrap" {
     module.rds,
   ]
 }
+
+# QA + Prod envs share the same RDS instance and schemas. They only need the
+# bakery-db Secret synced into their namespace; the schema-creation Job is a
+# harmless no-op (CREATE SCHEMA IF NOT EXISTS) but ensures the chart is fully
+# applied symmetrically across envs.
+resource "helm_release" "db_bootstrap_qa" {
+  name      = "db-bootstrap"
+  namespace = kubernetes_namespace.bakery_qa.metadata[0].name
+  chart     = "${path.module}/../../charts/db-bootstrap"
+
+  set {
+    name  = "namespace"
+    value = kubernetes_namespace.bakery_qa.metadata[0].name
+  }
+
+  set {
+    name  = "rdsSecretArn"
+    value = module.rds.db_instance_master_user_secret_arn
+  }
+
+  depends_on = [
+    kubernetes_manifest.cluster_secret_store,
+    kubernetes_service.bakery_db_qa,
+    module.rds,
+  ]
+}
+
+resource "helm_release" "db_bootstrap_prod" {
+  name      = "db-bootstrap"
+  namespace = kubernetes_namespace.bakery_prod.metadata[0].name
+  chart     = "${path.module}/../../charts/db-bootstrap"
+
+  set {
+    name  = "namespace"
+    value = kubernetes_namespace.bakery_prod.metadata[0].name
+  }
+
+  set {
+    name  = "rdsSecretArn"
+    value = module.rds.db_instance_master_user_secret_arn
+  }
+
+  depends_on = [
+    kubernetes_manifest.cluster_secret_store,
+    kubernetes_service.bakery_db_prod,
+    module.rds,
+  ]
+}

@@ -1,0 +1,5 @@
+image:
+  tag: sha-42e8b4d
+
+rollout:
+  autoPromotionEnabled: true

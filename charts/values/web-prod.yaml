@@ -1,0 +1,22 @@
+image:
+  tag: sha-42e8b4d
+
+replicaCount: 2
+
+rollout:
+  autoPromotionEnabled: false
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    external-dns.alpha.kubernetes.io/hostname: bakery-prod.usfcar.xyz
+  hosts:
+    - host: bakery-prod.usfcar.xyz
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts: [bakery-prod.usfcar.xyz]
+      secretName: bakery-prod-tls

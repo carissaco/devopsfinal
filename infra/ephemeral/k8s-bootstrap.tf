@@ -13,6 +13,22 @@ resource "kubernetes_namespace" "bakery" {
   depends_on = [module.eks]
 }
 
+resource "kubernetes_namespace" "bakery_qa" {
+  metadata {
+    name = "bakery-qa"
+  }
+
+  depends_on = [module.eks]
+}
+
+resource "kubernetes_namespace" "bakery_prod" {
+  metadata {
+    name = "bakery-prod"
+  }
+
+  depends_on = [module.eks]
+}
+
 resource "kubernetes_service" "bakery_db" {
   metadata {
     name      = "bakery-db"
@@ -26,6 +42,34 @@ resource "kubernetes_service" "bakery_db" {
 
   # The AWS LB Controller's mutating admission webhook intercepts every Service
   # creation cluster-wide. Wait for it to be healthy before creating Services.
+  depends_on = [helm_release.aws_load_balancer_controller]
+}
+
+resource "kubernetes_service" "bakery_db_qa" {
+  metadata {
+    name      = "bakery-db"
+    namespace = kubernetes_namespace.bakery_qa.metadata[0].name
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = module.rds.db_instance_address
+  }
+
+  depends_on = [helm_release.aws_load_balancer_controller]
+}
+
+resource "kubernetes_service" "bakery_db_prod" {
+  metadata {
+    name      = "bakery-db"
+    namespace = kubernetes_namespace.bakery_prod.metadata[0].name
+  }
+
+  spec {
+    type          = "ExternalName"
+    external_name = module.rds.db_instance_address
+  }
+
   depends_on = [helm_release.aws_load_balancer_controller]
 }
 

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: web
+  name: web-uat
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -13,25 +13,11 @@ spec:
     path: charts/web
     helm:
       releaseName: web
+      valueFiles:
+        - ../values/web-uat.yaml
       parameters:
         - name: image.repository
           value: 014516479340.dkr.ecr.us-east-1.amazonaws.com/web
-      values: |
-        ingress:
-          enabled: true
-          className: nginx
-          annotations:
-            cert-manager.io/cluster-issuer: letsencrypt-prod
-            external-dns.alpha.kubernetes.io/hostname: bakery.usfcar.xyz
-          hosts:
-            - host: bakery.usfcar.xyz
-              paths:
-                - path: /
-                  pathType: Prefix
-          tls:
-            - hosts:
-                - bakery.usfcar.xyz
-              secretName: bakery-tls
   destination:
     server: https://kubernetes.default.svc
     namespace: bakery

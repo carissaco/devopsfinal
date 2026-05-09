@@ -1,0 +1,7 @@
+image:
+  tag: sha-42e8b4d
+
+replicaCount: 2
+
+rollout:
+  autoPromotionEnabled: false

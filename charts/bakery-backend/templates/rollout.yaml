@@ -1,14 +1,21 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ include "bakery-backend.fullname" . }}
   labels:
     {{- include "bakery-backend.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       {{- include "bakery-backend.selectorLabels" . | nindent 6 }}
+  strategy:
+    blueGreen:
+      activeService: {{ include "bakery-backend.fullname" . }}
+      previewService: {{ include "bakery-backend.fullname" . }}-preview
+      autoPromotionEnabled: {{ .Values.rollout.autoPromotionEnabled }}
+      scaleDownDelaySeconds: {{ .Values.rollout.scaleDownDelaySeconds }}
   template:
     metadata:
       labels:

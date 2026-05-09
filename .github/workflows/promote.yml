@@ -1,0 +1,84 @@
+name: Promote image tag in gitops values
+
+on:
+  workflow_run:
+    workflows: ["Build and push images"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  promote:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine target environment and image tag
+        id: target
+        run: |
+          set -euo pipefail
+          HEAD_BRANCH="${{ github.event.workflow_run.head_branch }}"
+          HEAD_SHA="${{ github.event.workflow_run.head_sha }}"
+          SHORT_SHA="${HEAD_SHA:0:7}"
+          EVENT="${{ github.event.workflow_run.event }}"
+
+          # Tag pushes trigger the build with event=push but head_branch is the
+          # tag name itself when it matches a refs/tags/* pattern. The
+          # build-and-push workflow only runs on main pushes and v* tags.
+          if [[ "$HEAD_BRANCH" =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "env=prod" >> "$GITHUB_OUTPUT"
+            echo "tag=$HEAD_BRANCH" >> "$GITHUB_OUTPUT"
+            echo "Tag push detected: $HEAD_BRANCH -> prod"
+          else
+            # Push to main. Only promote if the head commit is a Conventional Commit.
+            COMMIT_MSG=$(git log -1 --pretty=%s "$HEAD_SHA")
+            echo "Commit subject: $COMMIT_MSG"
+            if [[ "$COMMIT_MSG" =~ ^(feat|fix|refactor|perf|build|ci|chore|docs|style|test|revert)(\(.+\))?!?: ]]; then
+              echo "env=uat" >> "$GITHUB_OUTPUT"
+              echo "tag=sha-$SHORT_SHA" >> "$GITHUB_OUTPUT"
+              echo "Conventional commit detected -> uat"
+            else
+              echo "env=skip" >> "$GITHUB_OUTPUT"
+              echo "Not a Conventional Commit. Skipping promotion."
+            fi
+          fi
+
+      - name: Update values files
+        if: steps.target.outputs.env != 'skip'
+        env:
+          ENV: ${{ steps.target.outputs.env }}
+          TAG: ${{ steps.target.outputs.tag }}
+        run: |
+          set -euo pipefail
+          for svc in catalog inventory orders web; do
+            file="charts/values/${svc}-${ENV}.yaml"
+            echo "Updating $file -> tag: $TAG"
+            # Replace the line `  tag: ...` under `image:`. Match exactly two-space
+            # indent so we don't touch nested image: blocks elsewhere.
+            sed -i -E "s|^(  tag: ).*|\1${TAG}|" "$file"
+          done
+          git diff --stat
+
+      - name: Commit and push
+        if: steps.target.outputs.env != 'skip'
+        env:
+          ENV: ${{ steps.target.outputs.env }}
+          TAG: ${{ steps.target.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add charts/values/
+          git commit -m "chore(release): promote ${TAG} to ${ENV}"
+          git push

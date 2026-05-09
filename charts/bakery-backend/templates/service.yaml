@@ -13,3 +13,22 @@ spec:
       protocol: TCP
   selector:
     {{- include "bakery-backend.selectorLabels" . | nindent 4 }}
+---
+# Preview Service for the Blue/Green Rollout. Argo Rollouts injects a selector
+# that points at the preview ReplicaSet during a rollout, allowing manual
+# verification before promoting traffic on the active Service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bakery-backend.fullname" . }}-preview
+  labels:
+    {{- include "bakery-backend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+  selector:
+    {{- include "bakery-backend.selectorLabels" . | nindent 4 }}

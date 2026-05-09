@@ -54,3 +54,13 @@ podAnnotations: {}
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+# Argo Rollouts Blue/Green strategy.
+# autoPromotionEnabled=false means the Rollout pauses at the preview state and
+# requires `kubectl argo rollouts promote <name>` (or the dashboard) to flip
+# traffic. Set true per-env if a service should auto-flip after readiness.
+# scaleDownDelaySeconds: how long the old (blue) ReplicaSet stays alive after
+# promotion, so in-flight requests can drain.
+rollout:
+  autoPromotionEnabled: false
+  scaleDownDelaySeconds: 30

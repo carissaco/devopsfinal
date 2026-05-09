@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: catalog
+  name: inventory-uat
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -12,11 +12,13 @@ spec:
     targetRevision: main
     path: charts/bakery-backend
     helm:
+      releaseName: inventory
       valueFiles:
-        - ../values/catalog.yaml
+        - ../values/inventory.yaml
+        - ../values/inventory-uat.yaml
       parameters:
         - name: image.repository
-          value: 014516479340.dkr.ecr.us-east-1.amazonaws.com/catalog-svc
+          value: 014516479340.dkr.ecr.us-east-1.amazonaws.com/inventory-svc
   destination:
     server: https://kubernetes.default.svc
     namespace: bakery

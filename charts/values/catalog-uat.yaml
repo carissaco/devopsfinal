@@ -1,0 +1,7 @@
+# UAT environment overrides for catalog-svc.
+# CI updates `image.tag` here on every Conventional Commit pushed to main.
+image:
+  tag: sha-42e8b4d
+
+rollout:
+  autoPromotionEnabled: true
