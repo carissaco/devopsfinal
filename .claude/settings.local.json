@@ -11,7 +11,8 @@
       "Bash(kubectl rollout *)",
       "Bash(MSYS_NO_PATHCONV=1 kubectl exec -n monitoring deploy/kube-prometheus-stack-grafana -c grafana -- grep -A 8 \"\\\\[users\\\\]\" /etc/grafana/grafana.ini)",
       "Bash(MSYS_NO_PATHCONV=1 kubectl exec -n monitoring deploy/kube-prometheus-stack-grafana -c grafana -- cat /etc/grafana/grafana.ini)",
-      "Bash(MSYS_NO_PATHCONV=1 kubectl exec -n monitoring deploy/kube-prometheus-stack-grafana -c grafana -- grep -A 3 \"\\\\[users\\\\]\" /etc/grafana/grafana.ini)"
+      "Bash(MSYS_NO_PATHCONV=1 kubectl exec -n monitoring deploy/kube-prometheus-stack-grafana -c grafana -- grep -A 3 \"\\\\[users\\\\]\" /etc/grafana/grafana.ini)",
+      "Bash(MSYS_NO_PATHCONV=1 kubectl exec -n monitoring deploy/kube-prometheus-stack-grafana -c grafana -- grep \"allow_sign_up = false\" /etc/grafana/grafana.ini)"
     ]
   }
 }

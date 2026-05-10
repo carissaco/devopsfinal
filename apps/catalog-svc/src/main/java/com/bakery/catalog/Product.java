@@ -24,6 +24,9 @@ public class Product {
     @Column(columnDefinition = "text")
     private String description;
 
+    @Column(name = "is_featured", nullable = false)
+    private Boolean isFeatured = false;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -36,6 +39,8 @@ public class Product {
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public Boolean getIsFeatured() { return isFeatured; }
+    public void setIsFeatured(Boolean isFeatured) { this.isFeatured = isFeatured; }
 
     public BigDecimal priceDollars() {
         return BigDecimal.valueOf(priceCents).movePointLeft(2);

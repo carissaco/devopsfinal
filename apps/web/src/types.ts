@@ -5,6 +5,7 @@ export interface Product {
   priceCents: number;
   imageUrl: string;
   description: string;
+  isFeatured?: boolean;
 }
 
 export interface Stock {

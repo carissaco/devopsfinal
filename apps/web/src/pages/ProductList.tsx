@@ -68,8 +68,13 @@ export default function ProductList() {
               key={p.id}
               className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition"
             >
-              <Link to={`/products/${p.id}`}>
+              <Link to={`/products/${p.id}`} className="relative block">
                 <img src={p.imageUrl} alt={p.name} className="w-full h-48 object-cover" />
+                {p.isFeatured && (
+                  <span className="absolute top-3 left-3 bg-crust text-cream text-xs font-bold uppercase tracking-wider px-2 py-1 rounded">
+                    Featured
+                  </span>
+                )}
               </Link>
               <div className="p-5">
                 <div className="flex items-start justify-between mb-1">
