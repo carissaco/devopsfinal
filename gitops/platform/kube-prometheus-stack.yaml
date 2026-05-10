@@ -104,6 +104,12 @@ spec:
           grafana.ini:
             server:
               root_url: https://grafana.usfcar.xyz
+            users:
+              # Every new user signed up via GitHub OAuth lands as Admin.
+              # Demo-grade — for real prod, restrict via team_ids or
+              # allowed_organizations on auth.github and use role_attribute_path
+              # to map team membership to roles.
+              auto_assign_org_role: Admin
             auth:
               # Disable username/password — rubric forbids it for prod access.
               disable_login_form: true
@@ -119,9 +125,6 @@ spec:
               auth_url: https://github.com/login/oauth/authorize
               token_url: https://github.com/login/oauth/access_token
               api_url: https://api.github.com/user
-              # First user that logs in becomes Admin. Demo-grade. For real
-              # prod you'd lock down via team_ids or allowed_organizations.
-              role_attribute_path: "'Admin'"
           ingress:
             enabled: true
             ingressClassName: nginx
