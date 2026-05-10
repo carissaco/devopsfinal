@@ -1,5 +1,5 @@
 image:
-  tag: sha-42e8b4d
+  tag: nightly-20260510
 
 rollout:
   autoPromotionEnabled: true
