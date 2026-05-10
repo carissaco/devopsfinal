@@ -117,8 +117,12 @@ spec:
               enabled: false
             "auth.github":
               enabled: true
-              allow_sign_up: true
-              # Map values come from the env vars sourced from grafana-github-oauth.
+              # Sign-up disabled: only pre-existing Grafana users (carissaco, the
+              # initial OAuth signup) can authenticate. Random GitHub users that
+              # complete the OAuth flow get a "User signup is not allowed" error.
+              # In real prod this would be paired with allowed_organizations and
+              # role_attribute_path mapping team membership to roles.
+              allow_sign_up: false
               client_id: $__env{GF_AUTH_GITHUB_CLIENT_ID}
               client_secret: $__env{GF_AUTH_GITHUB_CLIENT_SECRET}
               scopes: "user:email,read:org"
