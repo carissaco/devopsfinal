@@ -1,5 +1,5 @@
 image:
-  tag: sha-bf0133b
+  tag: sha-1ab73c2
 
 rollout:
   autoPromotionEnabled: true
