@@ -90,6 +90,13 @@ spec:
             enabled: true
             size: 2Gi
           defaultDashboardsEnabled: true
+          additionalDataSources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://loki-gateway.logging.svc.cluster.local
+              jsonData:
+                maxLines: 1000
           resources:
             requests:
               cpu: 50m
