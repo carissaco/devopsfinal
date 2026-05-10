@@ -14,9 +14,56 @@ spec:
     helm:
       releaseName: kube-prometheus-stack
       values: |
-        # AlertManager disabled in v1 (no email/Slack wiring yet — separate plan)
         alertmanager:
-          enabled: false
+          enabled: true
+          alertmanagerSpec:
+            # Mount the SMTP secret so the alertmanager config can read the
+            # password via auth_password_file (avoids password-in-config).
+            secrets:
+              - alertmanager-smtp
+            resources:
+              requests:
+                cpu: 25m
+                memory: 64Mi
+          config:
+            global:
+              resolve_timeout: 5m
+              smtp_smarthost: "smtp.gmail.com:587"
+              smtp_from: "carissahvc@gmail.com"
+              smtp_auth_username: "carissahvc@gmail.com"
+              smtp_auth_password_file: /etc/alertmanager/secrets/alertmanager-smtp/password
+              smtp_require_tls: true
+            route:
+              group_by: ["alertname", "namespace"]
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 12h
+              receiver: gmail
+              routes:
+                - matchers:
+                    - severity = "critical"
+                  receiver: gmail
+            receivers:
+              - name: gmail
+                email_configs:
+                  - to: "carissahvc@gmail.com"
+                    send_resolved: true
+
+        # A custom rule that's easy to demo: fires when any pod restarts more
+        # than once in 5 minutes. Triggerable by killing a pod twice.
+        additionalPrometheusRulesMap:
+          bakery-demo:
+            groups:
+              - name: bakery.demo
+                rules:
+                  - alert: BakeryPodRestartingFrequently
+                    expr: increase(kube_pod_container_status_restarts_total{namespace=~"bakery.*"}[5m]) > 1
+                    for: 1m
+                    labels:
+                      severity: critical
+                    annotations:
+                      summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} restarting frequently"
+                      description: "{{ $labels.namespace }}/{{ $labels.pod }} has restarted more than once in the last 5 minutes."
 
         prometheus:
           prometheusSpec:
@@ -27,23 +74,47 @@ spec:
                 memory: 1Gi
               limits:
                 memory: 2Gi
-            # Stricter scrape selectors so it doesn't try to discover everything
             serviceMonitorSelectorNilUsesHelmValues: false
             podMonitorSelectorNilUsesHelmValues: false
             ruleSelectorNilUsesHelmValues: false
 
         grafana:
-          # Static admin password until OAuth wiring lands in plan 4
-          adminPassword: bakery
+          # Pull GitHub OAuth client_id + client_secret from a k8s Secret
+          # named grafana-github-oauth (created out-of-band by kubectl).
+          envFromSecret: grafana-github-oauth
+          # Disable the static admin password — OAuth is the only way in.
+          admin:
+            existingSecret: ""
+          adminPassword: ""
           persistence:
             enabled: true
             size: 2Gi
-          # Pre-load the cluster overview dashboard set
           defaultDashboardsEnabled: true
           resources:
             requests:
               cpu: 50m
               memory: 128Mi
+          grafana.ini:
+            server:
+              root_url: https://grafana.usfcar.xyz
+            auth:
+              # Disable username/password — rubric forbids it for prod access.
+              disable_login_form: true
+            "auth.basic":
+              enabled: false
+            "auth.github":
+              enabled: true
+              allow_sign_up: true
+              # Map values come from the env vars sourced from grafana-github-oauth.
+              client_id: $__env{GF_AUTH_GITHUB_CLIENT_ID}
+              client_secret: $__env{GF_AUTH_GITHUB_CLIENT_SECRET}
+              scopes: "user:email,read:org"
+              auth_url: https://github.com/login/oauth/authorize
+              token_url: https://github.com/login/oauth/access_token
+              api_url: https://api.github.com/user
+              # First user that logs in becomes Admin. Demo-grade. For real
+              # prod you'd lock down via team_ids or allowed_organizations.
+              role_attribute_path: "'Admin'"
           ingress:
             enabled: true
             ingressClassName: nginx

@@ -29,6 +29,15 @@ module "eks" {
     }
     vpc-cni = {
       most_recent = true
+      # Prefix delegation lifts the pod-per-node ENI limit from 17 (t3.medium)
+      # to ~110, by assigning /28 prefixes instead of individual secondary IPs.
+      # No cost change. New pods after rollout pick up the higher limit.
+      configuration_values = jsonencode({
+        env = {
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
     }
     aws-ebs-csi-driver = {
       most_recent              = true

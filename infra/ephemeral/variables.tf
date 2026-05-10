@@ -41,8 +41,9 @@ variable "node_instance_types" {
 }
 
 variable "node_desired_size" {
-  type    = number
-  default = 4
+  description = "Desired number of worker nodes. With prefix delegation enabled in eks.tf the t3.medium pod density is ~110 instead of 17, so 4 nodes can comfortably host the 3-env (QA/UAT/Prod) bakery + observability stack on a fresh cluster."
+  type        = number
+  default     = 4
 }
 
 variable "node_min_size" {
@@ -52,7 +53,7 @@ variable "node_min_size" {
 
 variable "node_max_size" {
   type    = number
-  default = 5
+  default = 6
 }
 
 variable "rds_instance_class" {
