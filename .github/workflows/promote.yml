@@ -40,6 +40,13 @@ jobs:
             # Push to main. Only promote if the head commit is a Conventional Commit.
             COMMIT_MSG=$(git log -1 --pretty=%s "$HEAD_SHA")
             echo "Commit subject: $COMMIT_MSG"
+            # If head is a merge commit (from `git pull` without --rebase), walk
+            # to the most recent non-merge ancestor for the conventional-commit
+            # check. The image is still tagged with the head SHA.
+            if [[ "$COMMIT_MSG" =~ ^Merge ]]; then
+              COMMIT_MSG=$(git log --no-merges -1 --pretty=%s "$HEAD_SHA")
+              echo "Head is a merge commit. Using non-merge ancestor: $COMMIT_MSG"
+            fi
             if [[ "$COMMIT_MSG" =~ ^(feat|fix|refactor|perf|build|ci|chore|docs|style|test|revert)(\(.+\))?!?: ]]; then
               echo "env=uat" >> "$GITHUB_OUTPUT"
               echo "tag=sha-$SHORT_SHA" >> "$GITHUB_OUTPUT"
