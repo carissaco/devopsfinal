@@ -1,5 +1,5 @@
 image:
-  tag: sha-42e8b4d
+  tag: v1.0.0
 
 replicaCount: 2
 

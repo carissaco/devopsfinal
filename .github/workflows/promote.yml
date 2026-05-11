@@ -19,7 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          # Always work on main — this job commits its chore(release) bump to
+          # main regardless of whether the trigger was a main push or a v* tag
+          # build. Checking out a tag ref would leave a detached HEAD and the
+          # push would fail.
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           # Full history so the merge-commit walk below can reach the
           # non-merge ancestor (a shallow clone only has the tip commit).
