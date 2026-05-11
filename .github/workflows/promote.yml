@@ -4,7 +4,9 @@ on:
   workflow_run:
     workflows: ["Build and push images"]
     types: [completed]
-    branches: [main]
+    # No `branches:` filter — we also need this to fire for tag builds (v*),
+    # which run on a tag ref, not a branch. The job logic distinguishes
+    # tag pushes (-> prod) from main pushes (-> uat) via head_branch.
 
 permissions:
   contents: write
