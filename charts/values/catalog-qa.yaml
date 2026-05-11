@@ -1,7 +1,7 @@
 # QA environment overrides for catalog-svc.
 # CI updates `image.tag` here on the nightly build.
 image:
-  tag: nightly-20260510
+  tag: nightly-20260511
 
 rollout:
   autoPromotionEnabled: true

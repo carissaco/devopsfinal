@@ -1,5 +1,5 @@
 image:
-  tag: nightly-20260510
+  tag: nightly-20260511
 
 rollout:
   autoPromotionEnabled: true
