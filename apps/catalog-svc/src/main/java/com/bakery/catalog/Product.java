@@ -24,8 +24,11 @@ public class Product {
     @Column(columnDefinition = "text")
     private String description;
 
-    @Column(name = "is_featured", nullable = false)
+    @Column(name = "is_featured", nullable = false) // added new field to java backend
     private Boolean isFeatured = false;
+
+    @Column(name = "is_new", nullable = false)
+    private Boolean isNew = false;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -41,6 +44,8 @@ public class Product {
     public void setDescription(String description) { this.description = description; }
     public Boolean getIsFeatured() { return isFeatured; }
     public void setIsFeatured(Boolean isFeatured) { this.isFeatured = isFeatured; }
+    public Boolean getIsNew() { return isNew; }
+    public void setIsNew(Boolean isNew) { this.isNew = isNew; }
 
     public BigDecimal priceDollars() {
         return BigDecimal.valueOf(priceCents).movePointLeft(2);

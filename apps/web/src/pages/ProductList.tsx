@@ -70,9 +70,14 @@ export default function ProductList() {
             >
               <Link to={`/products/${p.id}`} className="relative block">
                 <img src={p.imageUrl} alt={p.name} className="w-full h-48 object-cover" />
-                {p.isFeatured && (
+                {p.isFeatured && ( // add the featured badge to the frontend UI
                   <span className="absolute top-3 left-3 bg-crust text-cream text-xs font-bold uppercase tracking-wider px-2 py-1 rounded">
                     Featured
+                  </span>
+                )}
+                {p.isNew && (
+                  <span className="absolute top-3 right-3 bg-emerald-600 text-cream text-xs font-bold uppercase tracking-wider px-2 py-1 rounded">
+                    New
                   </span>
                 )}
               </Link>

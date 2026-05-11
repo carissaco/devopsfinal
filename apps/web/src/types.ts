@@ -6,6 +6,7 @@ export interface Product {
   imageUrl: string;
   description: string;
   isFeatured?: boolean;
+  isNew?: boolean;
 }
 
 export interface Stock {

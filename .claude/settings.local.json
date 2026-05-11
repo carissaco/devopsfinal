@@ -42,7 +42,12 @@
       "Bash(MSYS_NO_PATHCONV=1 aws ec2 describe-network-interfaces *)",
       "Bash(MSYS_NO_PATHCONV=1 aws ec2 authorize-security-group-ingress --group-id sg-09b3b70fb2fa43213 --source-group sg-09b3b70fb2fa43213 --protocol all --region us-east-1 --output json)",
       "Bash(MSYS_NO_PATHCONV=1 kubectl run test-curl --rm -i --restart=Never --image=curlimages/curl:latest -- sh -c \"echo '=== UAT ==='; curl -sk -o /dev/null -w 'HTTP: %{http_code}\\\\n' https://bakery.usfcar.xyz/; curl -sk https://bakery.usfcar.xyz/api/catalog/products | grep -o 'isFeatured' | wc -l | xargs -I{} echo 'isFeatured fields in UAT response: {}'; echo '=== PROD ==='; curl -sk -o /dev/null -w 'HTTP: %{http_code}\\\\n' https://bakery-prod.usfcar.xyz/; curl -sk https://bakery-prod.usfcar.xyz/api/catalog/products | grep -o 'isFeatured' | wc -l | xargs -I{} echo 'isFeatured fields in PROD response: {}'\")",
-      "Bash(MSYS_NO_PATHCONV=1 kubectl run test-curl --rm -i --restart=Never --image=curlimages/curl:latest -- curl -s http://10.0.41.67:8080/products)"
+      "Bash(MSYS_NO_PATHCONV=1 kubectl run test-curl --rm -i --restart=Never --image=curlimages/curl:latest -- curl -s http://10.0.41.67:8080/products)",
+      "Bash(gh run *)",
+      "Bash(nslookup argo.usfcar.xyz 8.8.8.8)",
+      "Bash(nslookup grafana.usfcar.xyz 8.8.8.8)",
+      "Bash(nslookup bakery.usfcar.xyz 8.8.8.8)",
+      "Bash(MSYS_NO_PATHCONV=1 kubectl run test-curl --rm -i --restart=Never --image=curlimages/curl:latest -- sh -c \"curl -sk https://bakery.usfcar.xyz/api/catalog/products | grep -o 'isFeatured' | wc -l | xargs -I{} echo 'UAT: {}'; curl -sk https://bakery-prod.usfcar.xyz/api/catalog/products | grep -o 'isFeatured' | wc -l | xargs -I{} echo 'PROD: {}'\")"
     ]
   }
 }
