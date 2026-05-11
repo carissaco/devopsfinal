@@ -1,11 +1,11 @@
 # Production environment overrides for catalog-svc.
 # CI updates `image.tag` here only on release tag push (v*).
-# autoPromotionEnabled=false: prod Rollouts pause at preview, requiring manual
-# `kubectl argo rollouts promote catalog -n bakery-prod` to flip traffic.
+# autoPromotionEnabled=true: prod Blue/Green Rollouts bring up the new version,
+# run readiness checks, then auto-cut traffic over once the new pods are healthy.
 image:
   tag: sha-42e8b4d
 
 replicaCount: 2
 
 rollout:
-  autoPromotionEnabled: false
+  autoPromotionEnabled: true

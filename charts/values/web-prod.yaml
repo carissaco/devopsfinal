@@ -4,7 +4,7 @@ image:
 replicaCount: 2
 
 rollout:
-  autoPromotionEnabled: false
+  autoPromotionEnabled: true
 
 ingress:
   enabled: true
