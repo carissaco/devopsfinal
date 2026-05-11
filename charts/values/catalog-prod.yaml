@@ -3,7 +3,7 @@
 # autoPromotionEnabled=true: prod Blue/Green Rollouts bring up the new version,
 # run readiness checks, then auto-cut traffic over once the new pods are healthy.
 image:
-  tag: v1.0.0
+  tag: v1.1.0
 
 replicaCount: 2
 
