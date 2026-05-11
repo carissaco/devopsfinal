@@ -19,6 +19,9 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Full history so the merge-commit walk below can reach the
+          # non-merge ancestor (a shallow clone only has the tip commit).
+          fetch-depth: 0
 
       - name: Determine target environment and image tag
         id: target
